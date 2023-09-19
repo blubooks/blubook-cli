@@ -2,11 +2,25 @@
   "title": "test",
   "entries": [
     {
+      "type": 3,
+      "page": {
+        "title": "page9"
+      }
+    },
+    {
       "type": 1,
-      "groupTitle": "TExt hg2",
+      "title": "TExt hg2",
       "pages": [
         {
-          "title": "page1"
+          "title": "page1",
+          "pages": [
+            {
+              "title": "page 1.1"
+            },
+            {
+              "title": "page 2.2"
+            }
+          ]
         },
         {
           "title": "page2"
@@ -15,7 +29,7 @@
     },
     {
       "type": 1,
-      "groupTitle": "hallo",
+      "title": "hallo",
       "pages": [
         {
           "title": "page3"
@@ -28,24 +42,24 @@
     {
       "type": 3,
       "page": {
-        "title": "page5"
+        "title": "page9"
       }
     },
     {
       "type": 3,
       "page": {
-        "title": "page55"
+        "title": "page9"
       }
     },
     {
       "type": 3,
       "page": {
-        "title": "page566"
+        "title": "page9"
       }
     },
     {
       "type": 1,
-      "groupTitle": "Hallo1",
+      "title": "Hallo1",
       "pages": [
         {
           "title": "page6"
@@ -58,7 +72,7 @@
     {
       "type": 3,
       "page": {
-        "title": "page8"
+        "title": "page9"
       }
     },
     {

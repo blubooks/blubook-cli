@@ -28,11 +28,11 @@ type Page struct {
 	Pages []Page `json:"pages,omitempty"`
 }
 type MenuEntry struct {
-	Type       int    `json:"type,omitempty"`
-	GroupTitle string `json:"groupTitle,omitempty"`
-	Page       *Page  `json:"page,omitempty"`
-	Pages      []Page `json:"pages,omitempty"`
-	Set        bool   `json:"-"`
+	Type  int    `json:"type,omitempty"`
+	Title string `json:"title,omitempty"`
+	Page  *Page  `json:"page,omitempty"`
+	Pages []Page `json:"pages,omitempty"`
+	Set   bool   `json:"-"`
 }
 
 func main() {
@@ -87,6 +87,7 @@ func main() {
 	listLevel := 0
 
 	var menu Menu
+	var page Page
 	var entry MenuEntry
 	menu.Title = "test"
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -105,9 +106,9 @@ func main() {
 					}
 
 					entry = MenuEntry{
-						Set:        true,
-						Type:       1,
-						GroupTitle: string(n.Text([]byte(source))),
+						Set:   true,
+						Type:  1,
+						Title: string(n.Text([]byte(source))),
 					}
 				}
 
@@ -116,10 +117,27 @@ func main() {
 			} else if n.Kind() == ast.KindListItem {
 
 				if listLevel == 1 {
-					page := Page{
-						Title: string(n.Text([]byte(source))),
+
+					page = Page{
+						Title: string(n.FirstChild().Text([]byte(source))),
 					}
 
+				} else {
+					subpage := Page{
+						Title: string(n.FirstChild().Text([]byte(source))),
+					}
+					page.Pages = append(page.Pages, subpage)
+				}
+			}
+
+		} else {
+			if n.Kind() == ast.KindList {
+				listLevel = listLevel - 1
+			} else if n.Kind() == ast.KindThematicBreak {
+				menu.Entries = append(menu.Entries, entry)
+				entry = MenuEntry{}
+			} else if n.Kind() == ast.KindListItem {
+				if listLevel == 1 {
 					if entry.Type != 1 {
 						entry = MenuEntry{
 							Set:  true,
@@ -132,16 +150,7 @@ func main() {
 						entry.Pages = append(entry.Pages, page)
 
 					}
-
 				}
-			}
-
-		} else {
-			if n.Kind() == ast.KindList {
-				listLevel = listLevel - 1
-			} else if n.Kind() == ast.KindThematicBreak {
-				menu.Entries = append(menu.Entries, entry)
-				entry = MenuEntry{}
 			}
 		}
 		/*
