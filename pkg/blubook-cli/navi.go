@@ -1,5 +1,6 @@
 package blubookcli
 
+// test
 import (
 	"bytes"
 	"os"
