@@ -1,12 +1,12 @@
 
-- apge0
+- [test](/test/test)
 
 ## TExt hg2
 
-- page1
-  - page 1.1
-  - page 2.2
-- page2
+* [page 1](/test/test)
+  - [page 1.1](/test/test)
+  - [page 1.2](/test/test)
+* [page 3](/test/test)
 
 ## hallo
 
@@ -26,7 +26,6 @@
 
 ***
 
-- page8
+- [page8](/test/test)
 - page9
-
 

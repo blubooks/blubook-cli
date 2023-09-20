@@ -35,6 +35,63 @@ type MenuEntry struct {
 	Set   bool   `json:"-"`
 }
 
+func list(node ast.Node, initLevel int, page *Page, source *[]byte) {
+	level := initLevel
+	ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		s := ast.WalkStatus(ast.WalkContinue)
+
+		if entering {
+			if n.Kind() == ast.KindList {
+				level = level + 1
+
+			}
+			if n.Kind() == ast.KindListItem {
+				if level == initLevel+1 {
+					pg := Page{}
+					pg.Title, pg.Link = listitemlink(n.FirstChild(), source)
+
+					list(n, level, &pg, source)
+
+					page.Pages = append(page.Pages, pg)
+
+				}
+			}
+		} else {
+			if n.Kind() == ast.KindList {
+				level = level - 1
+			}
+		}
+		var err error
+		return s, err
+	})
+}
+
+func listitemlink(node ast.Node, source *[]byte) (text string, link string) {
+	l_text := ""
+	l_link := ""
+	ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		s := ast.WalkStatus(ast.WalkContinue)
+
+		if entering {
+			if n.Kind() == ast.KindLink {
+				l := n.(*ast.Link)
+				l_text = string(n.Text([]byte(*source)))
+				l_link = string(l.Destination)
+
+			}
+		}
+		var err error
+		return s, err
+	})
+
+	if l_text == "" {
+		l_text = string(node.FirstChild().Text([]byte(*source)))
+	}
+
+	return l_text, l_link
+
+}
+
 func main() {
 	//fmt.Println("hello world")
 
@@ -57,39 +114,13 @@ func main() {
 		panic(err)
 	}
 
-	/*
-
-		md := goldmark.New(
-			goldmark.WithExtensions(extension.GFM),
-			goldmark.WithParserOptions(
-				parser.WithAutoHeadingID(),
-			),
-			goldmark.WithRendererOptions(
-				html.WithHardWraps(),
-				html.WithXHTML(),
-			),
-		)
-
-		doc := md.Parser().Parse(text.NewReader(b1))
-
-		ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-
-			//if entering {
-			fmt.Printf("WAlk: %+v\n", n.Kind())
-
-			//}
-
-			return ast.WalkContinue, nil
-		})
-	*/
-
 	doc := goldmark.DefaultParser().Parse(text.NewReader([]byte(source)))
 	listLevel := 0
 
 	var menu Menu
 	var page Page
 	var entry MenuEntry
-	menu.Title = "test"
+	menu.Title = "TITLE"
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		s := ast.WalkStatus(ast.WalkContinue)
 		var err error
@@ -112,103 +143,53 @@ func main() {
 					}
 				}
 
+			} else if n.Kind() == ast.KindThematicBreak {
+				if entry.Set {
+					menu.Entries = append(menu.Entries, entry)
+					entry = MenuEntry{}
+
+				}
 			} else if n.Kind() == ast.KindList {
 				listLevel = listLevel + 1
+
 			} else if n.Kind() == ast.KindListItem {
 
 				if listLevel == 1 {
 
-					page = Page{
-						Title: string(n.FirstChild().Text([]byte(source))),
-					}
+					if entry.Type == 1 {
+						page = Page{}
+						page.Title, page.Link = listitemlink(n.FirstChild(), &source)
+						list(n, 1, &page, &source)
 
-				} else {
-					subpage := Page{
-						Title: string(n.FirstChild().Text([]byte(source))),
+						entry.Pages = append(entry.Pages, page)
+					} else {
+						if entry.Set {
+							menu.Entries = append(menu.Entries, entry)
+						}
+
+						pg := Page{}
+						pg.Title, pg.Link = listitemlink(n, &source)
+						entry = MenuEntry{
+							Set:  true,
+							Type: 3,
+							Page: &pg,
+						}
+						menu.Entries = append(menu.Entries, entry)
+						entry = MenuEntry{}
+
 					}
-					page.Pages = append(page.Pages, subpage)
 				}
 			}
 
 		} else {
 			if n.Kind() == ast.KindList {
 				listLevel = listLevel - 1
-			} else if n.Kind() == ast.KindThematicBreak {
-				menu.Entries = append(menu.Entries, entry)
-				entry = MenuEntry{}
-			} else if n.Kind() == ast.KindListItem {
-				if listLevel == 1 {
-					if entry.Type != 1 {
-						entry = MenuEntry{
-							Set:  true,
-							Type: 3,
-						}
-						entry.Page = &page
-						menu.Entries = append(menu.Entries, entry)
-						entry = MenuEntry{}
-					} else {
-						entry.Pages = append(entry.Pages, page)
-
-					}
+			} else if n.Kind() == ast.KindDocument {
+				if entry.Set {
+					menu.Entries = append(menu.Entries, entry)
 				}
 			}
 		}
-		/*
-			if entering {
-
-				fmt.Println("   ")
-				fmt.Println(n.Kind(), entering, string(n.Text([]byte(source))))
-
-				if n.Kind() == ast.KindHeading {
-
-					h := n.(*ast.Heading)
-					if h.Level == 2 {
-
-						if entry.Type == 1 {
-							menu.Entries = append(menu.Entries, entry)
-							entry = MenuEntry{
-								Type: 3,
-							}
-						}
-
-						entry = MenuEntry{
-							Type:       1,
-							GroupTitle: string(n.Text([]byte(source))),
-						}
-					}
-
-				} else if n.Kind() == ast.KindListItem {
-					firstH := n.(*ast.ListItem)
-					firstH.SetAttribute([]byte("level"), 1)
-					page := Page{
-						Title: string(n.Text([]byte(source))),
-					}
-					entry.Pages = append(entry.Pages, page)
-				} else if n.Kind() == ast.KindList {
-					listLevel = listLevel + 1
-					if listLevel == 1 {
-						if entry.Type == 0 {
-							entry = MenuEntry{
-								Type: 2,
-							}
-						}
-					}
-				} else if n.Kind() == ast.KindThematicBreak {
-					listLevel = listLevel + 1
-					menu.Entries = append(menu.Entries, entry)
-					entry = MenuEntry{
-						Type: 3,
-					}
-
-				}
-
-			} else {
-				if n.Kind() == ast.KindDocument {
-					menu.Entries = append(menu.Entries, entry)
-
-				}
-			}
-		*/
 
 		return s, err
 	})
