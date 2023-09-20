@@ -1,0 +1,21 @@
+
+{{ define "pages" }}
+    <div class="level-{{ .Level }}">
+      
+        <div><a href="{{ .Link }}">{{ .Title }}</a></div>
+    {{- range .Pages }} 
+        {{ template "pages" . }}       
+    {{ end -}}
+    </div>
+{{ end }}
+
+{{- range .Pages -}} 
+<div>
+{{- if eq .Type 1 }}
+    <h1>{{ .Title }}</h1>
+
+{{  end -}}
+{{ template "pages" . }}
+
+</div>
+{{- end -}}

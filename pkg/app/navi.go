@@ -1,4 +1,4 @@
-package blubookcli
+package app
 
 // test
 import (
@@ -21,14 +21,14 @@ type Menu struct {
 	Pages []Page `json:"pages,omitempty"`
 }
 type Page struct {
-	Set        bool   `json:"-"`
-	Parent     *Page  `json:"-"`
-	ParentLink string `json:"parent,omitempty"`
-	Level      int    `json:"level,omitempty"`
-	Type       int    `json:"type,omitempty"`
-	Title      string `json:"title,omitempty"`
-	Link       string `json:"link,omitempty"`
-	Pages      []Page `json:"pages,omitempty"`
+	Set        bool    `json:"-"`
+	Parent     *Page   `json:"-"`
+	ParentLink *string `json:"parent,omitempty"`
+	Level      int     `json:"level,omitempty"`
+	Type       int     `json:"type,omitempty"`
+	Title      *string `json:"title,omitempty"`
+	Link       *string `json:"link,omitempty"`
+	Pages      []Page  `json:"pages,omitempty"`
 }
 
 /*
@@ -63,7 +63,8 @@ func list(node ast.Node, initLevel int, page *Page, source *[]byte) {
 					pg.Level = level
 					pg.Parent = page
 					pg.ParentLink = page.Link
-					pg.Title, pg.Link = listitemlink(n.FirstChild(), source)
+
+					listitemlink(&pg, n.FirstChild(), source)
 
 					list(n, level, &pg, source)
 
@@ -81,17 +82,19 @@ func list(node ast.Node, initLevel int, page *Page, source *[]byte) {
 	})
 }
 
-func listitemlink(node ast.Node, source *[]byte) (text string, link string) {
-	l_text := ""
-	l_link := ""
+func listitemlink(page *Page, node ast.Node, source *[]byte) {
+
 	ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		s := ast.WalkStatus(ast.WalkContinue)
 
 		if entering {
 			if n.Kind() == ast.KindLink {
 				l := n.(*ast.Link)
-				l_text = string(n.Text([]byte(*source)))
-				l_link = string(l.Destination)
+				titleStr := string(n.Text([]byte(*source)))
+				linkStr := string(l.Destination)
+
+				page.Title = &titleStr
+				page.Link = &linkStr
 
 			}
 		}
@@ -99,11 +102,12 @@ func listitemlink(node ast.Node, source *[]byte) (text string, link string) {
 		return s, err
 	})
 
-	if l_text == "" {
-		l_text = string(node.FirstChild().Text([]byte(*source)))
+	if page.Title == nil {
+		titleStr := string(node.FirstChild().Text([]byte(*source)))
+		page.Title = &titleStr
 	}
 
-	return l_text, l_link
+	return
 
 }
 
@@ -140,11 +144,13 @@ func BookNavi() *Menu {
 						menu.Pages = append(menu.Pages, entry)
 					}
 
+					titleStr := string(n.Text([]byte(source)))
+
 					entry = Page{
 						Set:   true,
 						Level: listLevel,
 						Type:  TypeGroup,
-						Title: string(n.Text([]byte(source))),
+						Title: &titleStr,
 					}
 				}
 
@@ -164,7 +170,7 @@ func BookNavi() *Menu {
 					pg.Set = true
 					pg.Type = TypeMenuItem
 					pg.Level = listLevel
-					pg.Title, pg.Link = listitemlink(n.FirstChild(), &source)
+					listitemlink(&pg, n.FirstChild(), &source)
 
 					if entry.Type == 1 {
 						list(n, 1, &pg, &source)

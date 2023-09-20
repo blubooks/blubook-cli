@@ -1,13 +1,9 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"os"
+	"flag"
 
-	"github.com/blubooks/blubook-cli/pkg/blubookcli"
+	"github.com/blubooks/blubook-cli/cmd"
 )
 
 func check(e error) {
@@ -16,27 +12,41 @@ func check(e error) {
 	}
 }
 func main() {
-	menu := blubookcli.BookNavi()
-	//fmt.Printf("- parent  %+v\n", menu)
-	b, err := json.Marshal(menu)
-	var out bytes.Buffer
 
-	json.Indent(&out, b, "", "  ")
+	server := flag.Bool("server", false, "Start Server")
 
-	if err != nil {
-		fmt.Println(err)
+	flag.Parse()
+
+	if *server {
+		cmd.Server()
 		return
 	}
+	cmd.Server()
 
-	f, err := os.Create("test.json")
-	check(err)
-	defer f.Close()
+	//	flag.PrintDefaults()
+	/*
+		menu := app.BookNavi()
+		//fmt.Printf("- parent  %+v\n", menu)
+		b, err := json.Marshal(menu)
+		var out bytes.Buffer
 
-	w := bufio.NewWriter(f)
-	n4, err := w.WriteString(string(out.Bytes()))
-	check(err)
-	fmt.Printf("wrote %d bytes\n", n4)
-	w.Flush()
+		json.Indent(&out, b, "", "  ")
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		f, err := os.Create("test.json")
+		check(err)
+		defer f.Close()
+
+		w := bufio.NewWriter(f)
+		n4, err := w.WriteString(string(out.Bytes()))
+		check(err)
+		fmt.Printf("wrote %d bytes\n", n4)
+		w.Flush()
+	*/
 
 }
 
