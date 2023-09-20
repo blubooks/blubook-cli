@@ -10,6 +10,11 @@ import (
 	"github.com/blubooks/blubook-cli/pkg/blubookcli"
 )
 
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
 func main() {
 	menu := blubookcli.BookNavi()
 	//fmt.Printf("- parent  %+v\n", menu)
