@@ -1,53 +1,13 @@
-package main
+package blubookcli
 
 import (
-	"bufio"
 	"bytes"
-	"encoding/json"
-	"fmt"
 	"os"
 
-	bcli "github.com/blubooks/blubook-cli/pkg/blubook-cli"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/text"
 )
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
-func main() {
-	menu := bcli.BookNavi()
-	//fmt.Printf("- parent  %+v\n", menu)
-	b, err := json.Marshal(menu)
-	var out bytes.Buffer
-
-	json.Indent(&out, b, "", "  ")
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	f, err := os.Create("test.json")
-	check(err)
-	defer f.Close()
-
-	w := bufio.NewWriter(f)
-	n4, err := w.WriteString(string(out.Bytes()))
-	check(err)
-	fmt.Printf("wrote %d bytes\n", n4)
-	w.Flush()
-
-}
-
-/*
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 type Menu struct {
 	Title   string      `json:"title,omitempty"`
@@ -64,6 +24,12 @@ type MenuEntry struct {
 	Page  *Page  `json:"page,omitempty"`
 	Pages []Page `json:"pages,omitempty"`
 	Set   bool   `json:"-"`
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
 
 func list(node ast.Node, initLevel int, page *Page, source *[]byte) {
@@ -123,9 +89,9 @@ func listitemlink(node ast.Node, source *[]byte) (text string, link string) {
 
 }
 
-func main() {
+func BookNavi() *Menu {
 
-	source, err := os.ReadFile("SUMMARY.md")
+	source, err := os.ReadFile("content/SUMMARY.md")
 	check(err)
 
 	var buf bytes.Buffer
@@ -213,26 +179,5 @@ func main() {
 		return s, err
 	})
 
-	//fmt.Printf("- parent  %+v\n", menu)
-	b, err := json.Marshal(menu)
-	var out bytes.Buffer
-
-	json.Indent(&out, b, "", "  ")
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	f, err := os.Create("test.json")
-	check(err)
-	defer f.Close()
-
-	w := bufio.NewWriter(f)
-	n4, err := w.WriteString(string(out.Bytes()))
-	check(err)
-	fmt.Printf("wrote %d bytes\n", n4)
-	w.Flush()
-
+	return &menu
 }
-*/
