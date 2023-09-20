@@ -1,91 +1,63 @@
 {
-  "title": "TITLE",
-  "entries": [
+  "title": "Title",
+  "pages": [
     {
-      "type": 3,
-      "page": {
-        "title": "test",
-        "link": "/test/test"
-      }
+      "level": 1,
+      "type": 2,
+      "title": "test",
+      "link": "test"
+    },
+    {
+      "level": 1,
+      "type": 2,
+      "title": "test2",
+      "link": "test2"
     },
     {
       "type": 1,
       "title": "TExt hg2",
       "pages": [
         {
+          "level": 1,
+          "type": 2,
           "title": "page 1",
-          "link": "/test/test",
+          "link": "page-1/",
           "pages": [
             {
+              "parent": "page-1/",
+              "level": 2,
+              "type": 3,
               "title": "page 1.1",
-              "link": "/test/test"
+              "link": "page-1/page1"
             },
             {
+              "parent": "page-1/",
+              "level": 2,
+              "type": 3,
               "title": "page 1.2",
-              "link": "/test/test"
+              "link": "page-1/page2"
             }
           ]
         },
         {
+          "level": 1,
+          "type": 2,
           "title": "page 3",
-          "link": "/test/test"
+          "link": "page-3"
         }
       ]
     },
     {
-      "type": 1,
-      "title": "hallo",
-      "pages": [
-        {
-          "title": "page3"
-        },
-        {
-          "title": "page4"
-        }
-      ]
+      "level": 1,
+      "type": 2,
+      "title": "page 4",
+      "link": "page-4"
     },
     {
-      "type": 3,
-      "page": {
-        "title": "page5"
-      }
-    },
-    {
-      "type": 3,
-      "page": {
-        "title": "page55"
-      }
-    },
-    {
-      "type": 3,
-      "page": {
-        "title": "page566"
-      }
-    },
-    {
-      "type": 1,
-      "title": "Hallo1",
-      "pages": [
-        {
-          "title": "page6"
-        },
-        {
-          "title": "page7"
-        }
-      ]
-    },
-    {
-      "type": 3,
-      "page": {
-        "title": "page8",
-        "link": "/test/test"
-      }
-    },
-    {
-      "type": 3,
-      "page": {
-        "title": "page9"
-      }
+      "level": 1,
+      "type": 2,
+      "title": "page 5",
+      "link": "page-5"
     }
   ]
 }

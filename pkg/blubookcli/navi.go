@@ -10,22 +10,35 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
+const (
+	TypeGroup    int = 1
+	TypeMenuItem int = 2
+	TypeLink     int = 3
+)
+
 type Menu struct {
-	Title   string      `json:"title,omitempty"`
-	Entries []MenuEntry `json:"entries,omitempty"`
-}
-type Page struct {
 	Title string `json:"title,omitempty"`
-	Link  string `json:"link,omitempty"`
 	Pages []Page `json:"pages,omitempty"`
 }
+type Page struct {
+	Set        bool   `json:"-"`
+	Parent     *Page  `json:"-"`
+	ParentLink string `json:"parent,omitempty"`
+	Level      int    `json:"level,omitempty"`
+	Type       int    `json:"type,omitempty"`
+	Title      string `json:"title,omitempty"`
+	Link       string `json:"link,omitempty"`
+	Pages      []Page `json:"pages,omitempty"`
+}
+
+/*
 type MenuEntry struct {
 	Type  int    `json:"type,omitempty"`
 	Title string `json:"title,omitempty"`
-	Page  *Page  `json:"page,omitempty"`
 	Pages []Page `json:"pages,omitempty"`
 	Set   bool   `json:"-"`
 }
+*/
 
 func check(e error) {
 	if e != nil {
@@ -46,6 +59,10 @@ func list(node ast.Node, initLevel int, page *Page, source *[]byte) {
 			if n.Kind() == ast.KindListItem {
 				if level == initLevel+1 {
 					pg := Page{}
+					pg.Type = TypeLink
+					pg.Level = level
+					pg.Parent = page
+					pg.ParentLink = page.Link
 					pg.Title, pg.Link = listitemlink(n.FirstChild(), source)
 
 					list(n, level, &pg, source)
@@ -104,9 +121,8 @@ func BookNavi() *Menu {
 	listLevel := 0
 
 	var menu Menu
-	var page Page
-	var entry MenuEntry
-	menu.Title = "TITLE"
+
+	var entry Page
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		s := ast.WalkStatus(ast.WalkContinue)
 		var err error
@@ -116,24 +132,26 @@ func BookNavi() *Menu {
 			if n.Kind() == ast.KindHeading {
 
 				h := n.(*ast.Heading)
-				if h.Level == 2 {
+				if h.Level == 1 && menu.Title == "" {
+					menu.Title = string(n.Text([]byte(source)))
+				} else if h.Level == 2 {
 
 					if entry.Set {
-						menu.Entries = append(menu.Entries, entry)
+						menu.Pages = append(menu.Pages, entry)
 					}
 
-					entry = MenuEntry{
+					entry = Page{
 						Set:   true,
-						Type:  1,
+						Level: listLevel,
+						Type:  TypeGroup,
 						Title: string(n.Text([]byte(source))),
 					}
 				}
 
 			} else if n.Kind() == ast.KindThematicBreak {
 				if entry.Set {
-					menu.Entries = append(menu.Entries, entry)
-					entry = MenuEntry{}
-
+					menu.Pages = append(menu.Pages, entry)
+					entry = Page{}
 				}
 			} else if n.Kind() == ast.KindList {
 				listLevel = listLevel + 1
@@ -142,27 +160,17 @@ func BookNavi() *Menu {
 
 				if listLevel == 1 {
 
+					pg := Page{}
+					pg.Set = true
+					pg.Type = TypeMenuItem
+					pg.Level = listLevel
+					pg.Title, pg.Link = listitemlink(n.FirstChild(), &source)
+
 					if entry.Type == 1 {
-						page = Page{}
-						page.Title, page.Link = listitemlink(n.FirstChild(), &source)
-						list(n, 1, &page, &source)
-
-						entry.Pages = append(entry.Pages, page)
+						list(n, 1, &pg, &source)
+						entry.Pages = append(entry.Pages, pg)
 					} else {
-						if entry.Set {
-							menu.Entries = append(menu.Entries, entry)
-						}
-
-						pg := Page{}
-						pg.Title, pg.Link = listitemlink(n, &source)
-						entry = MenuEntry{
-							Set:  true,
-							Type: 3,
-							Page: &pg,
-						}
-						menu.Entries = append(menu.Entries, entry)
-						entry = MenuEntry{}
-
+						menu.Pages = append(menu.Pages, pg)
 					}
 				}
 			}
@@ -172,7 +180,7 @@ func BookNavi() *Menu {
 				listLevel = listLevel - 1
 			} else if n.Kind() == ast.KindDocument {
 				if entry.Set {
-					menu.Entries = append(menu.Entries, entry)
+					menu.Pages = append(menu.Pages, entry)
 				}
 			}
 		}
