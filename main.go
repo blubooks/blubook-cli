@@ -7,17 +7,11 @@ import (
 	"fmt"
 	"os"
 
-	bcli "github.com/blubooks/blubook-cli/pkg/blubook-cli"
+	"github.com/blubooks/blubook-cli/pkg/blubookcli"
 )
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 func main() {
-	menu := bcli.BookNavi()
+	menu := blubookcli.BookNavi()
 	//fmt.Printf("- parent  %+v\n", menu)
 	b, err := json.Marshal(menu)
 	var out bytes.Buffer

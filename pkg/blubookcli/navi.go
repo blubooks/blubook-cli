@@ -92,7 +92,7 @@ func listitemlink(node ast.Node, source *[]byte) (text string, link string) {
 
 func BookNavi() *Menu {
 
-	source, err := os.ReadFile("content/SUMMARY.md")
+	source, err := os.ReadFile("data/content/SUMMARY.md")
 	check(err)
 
 	var buf bytes.Buffer
