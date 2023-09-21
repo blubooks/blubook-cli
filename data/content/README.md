@@ -7,4 +7,4 @@ footnote-prefix: article1
 # Welcome
 
 
-![image](.data/assets/Nextcloud.png)
+![image](.data/assets/Nextcloud.png "noMargin")

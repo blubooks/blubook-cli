@@ -2,13 +2,18 @@ package app
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 
+	sass "github.com/bep/golibsass/libsass"
+	"github.com/blubooks/blubook-cli/pkg/goldmark/baseurl"
+	replacer "github.com/fundipper/goldmark-replacer"
 	"github.com/wellington/go-libsass"
 	"github.com/yuin/goldmark"
 	meta "github.com/yuin/goldmark-meta"
@@ -28,6 +33,7 @@ const (
 	appErrDataUpdateFailure      = "data update failure"
 	appErrFormErrResponseFailure = "form error response failure"
 )
+const PUBLIC_FILES = "bfdata/files/"
 
 var funcMap = template.FuncMap{
 	"partial": partial,
@@ -41,14 +47,17 @@ func New() *App {
 }
 
 type TemplateData struct {
-	Menu       *Menu
-	Page       *Page
+	Menu *Menu
+	Page *Page
+	Site struct {
+		PublicPath string
+		DataPath   string
+		LayoutPath string
+		PublicURL  string
+	}
+
 	ActivePath string
 	Content    string
-	PublicPath string
-	DataPath   string
-	LayoutPath string
-	PublicURL  string
 }
 
 func copyDir(source, destination string) error {
@@ -89,17 +98,39 @@ func partial(name string, data any) string {
 	return result
 }
 
-func loadMarkdown(filename string) (error, string) {
+type RegexpLinkTransformer struct {
+	LinkPattern *regexp.Regexp
+	ReplUrl     []byte
+}
+
+func loadMarkdown(data *TemplateData, filename string) (error, string) {
 	source, err := os.ReadFile(filename)
 	if err != nil {
 		return err, ""
 	}
+
 	var buf bytes.Buffer
+
+	/*
+		str := string(source)
+		re := regexp.MustCompile("page3")
+		newStr := re.ReplaceAllString(str, "PAGE3")
+	*/
 
 	markdown := goldmark.New(
 		goldmark.WithExtensions(
 			meta.Meta,
-		),
+			replacer.NewExtender(
+				"(c)", "&copy;",
+				"(r)", "&reg;",
+				"...", "&hellip;",
+				"(tm)", "&trade;",
+				"<-", "&larr;",
+				"->", "&rarr;",
+				"<->", "&harr;",
+				"--", "&mdash;",
+			),
+			baseurl.NewExtender(data.Site.PublicURL, PUBLIC_FILES)),
 	)
 
 	if err := markdown.Convert(source, &buf); err != nil {
@@ -128,7 +159,7 @@ func createHtmlFiles(tmpl *template.Template, page Page, out *[]string, data Tem
 		return
 	}
 
-	publicFilePath := data.PublicPath + *page.Link
+	publicFilePath := data.Site.PublicPath + *page.Link
 	_ = os.MkdirAll(publicFilePath, os.ModePerm)
 
 	var file *os.File
@@ -157,7 +188,7 @@ func page(pg []Page, tmpl *template.Template, out *[]string, data TemplateData) 
 		if s.Link != nil && s.DataLink != nil {
 
 			var err error
-			err, data.Content = loadMarkdown(data.DataPath + *s.DataLink)
+			err, data.Content = loadMarkdown(&data, data.Site.DataPath+*s.DataLink)
 			data.ActivePath = *s.Link
 			data.Page = &s
 
@@ -209,10 +240,10 @@ func Build(publicURL, layoutPath string, publicPath string, dataPath string) (er
 	var out []string
 	var data TemplateData
 	data.Menu = menu
-	data.PublicPath = publicPath
+	data.Site.PublicPath = publicPath
+	data.Site.DataPath = dataPath
+	data.Site.PublicURL = publicURL
 	data.ActivePath = layoutPath
-	data.DataPath = dataPath
-	data.PublicURL = publicURL
 
 	tmpl, err := template.New("").Funcs(funcMap).ParseGlob(layoutPath + "*.html")
 	if err != nil {
@@ -221,18 +252,20 @@ func Build(publicURL, layoutPath string, publicPath string, dataPath string) (er
 	RemoveGlob(publicPath + "*")
 
 	copyDir(layoutPath+"static", publicPath)
-	_ = os.MkdirAll(publicPath+".data/assets", os.ModePerm)
-	copyDir(dataPath+".data/assets", publicPath+".data/assets")
+
+	_ = os.MkdirAll(publicPath+PUBLIC_FILES, os.ModePerm)
+	copyDir(dataPath+".data/assets", publicPath+PUBLIC_FILES)
 
 	file, err := os.Create(publicPath + "index.html")
 	if err != nil {
 		return err, []string{err.Error()}
 	}
 
-	err, data.Content = loadMarkdown(dataPath + "README.md")
+	err, data.Content = loadMarkdown(&data, dataPath+"README.md")
 	if err != nil {
 		return err, []string{err.Error()}
 	}
+	data.Page = nil
 	data.ActivePath = publicPath
 
 	err = tmpl.ExecuteTemplate(file, "index.html", data)
@@ -245,7 +278,7 @@ func Build(publicURL, layoutPath string, publicPath string, dataPath string) (er
 
 		if s.DataLink != nil {
 
-			err, data.Content = loadMarkdown(dataPath + *s.DataLink)
+			err, data.Content = loadMarkdown(&data, dataPath+*s.DataLink)
 			data.ActivePath = *s.Link
 			data.Page = &s
 			if err != nil {
@@ -261,6 +294,26 @@ func Build(publicURL, layoutPath string, publicPath string, dataPath string) (er
 		}
 
 	}
+
+	transpiler, err := sass.New(sass.Options{OutputStyle: sass.CompressedStyle})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result, err := transpiler.Execute(`
+		$font-stack:    Helvetica, sans-serif;
+		$primary-color: #333;
+
+		body {
+		font: 100% $font-stack;
+		color: $primary-color;
+		}
+		`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(result.CSS)
 
 	styleFile := layoutPath + "assets/style/style.scss"
 	if _, err := os.Stat(styleFile); err == nil {
