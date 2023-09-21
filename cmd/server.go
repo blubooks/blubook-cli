@@ -26,7 +26,6 @@ func Server() {
 		Addr:    address,
 		Handler: appRouter,
 	}
-	app.Build()
 
 	closed := make(chan struct{})
 	go func() {
@@ -56,5 +55,5 @@ func Server() {
 		log.Println("server startup failure", err)
 
 	}
-
+	app.Build("", "", "")
 }

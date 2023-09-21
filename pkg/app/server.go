@@ -20,12 +20,17 @@ func (app *App) HanlderHealth(res http.ResponseWriter, req *http.Request) {
 func (app *App) HandleIndex(res http.ResponseWriter, req *http.Request) {
 
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	err := Build()
+	err, warn := Build("", "", "")
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		log.Printf("Fehler: %v", err)
 		fmt.Fprintf(res, `{"error.message": "%v"}`, appErr)
 		return
+	}
+
+	if warn != nil {
+		fmt.Fprintf(res, `{"warn": %v}`, warn)
+
 	}
 
 }

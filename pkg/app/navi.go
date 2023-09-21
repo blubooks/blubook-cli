@@ -4,6 +4,8 @@ package app
 import (
 	"bytes"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -28,6 +30,7 @@ type Page struct {
 	Type       int     `json:"type,omitempty"`
 	Title      *string `json:"title,omitempty"`
 	Link       *string `json:"link,omitempty"`
+	DataLink   *string `json:"-"`
 	Pages      []Page  `json:"pages,omitempty"`
 }
 
@@ -46,6 +49,22 @@ func check(e error) {
 	}
 }
 
+func createLink(link *string) *string {
+	if link != nil {
+
+		if filepath.Base(*link) == "README.md" {
+			l := filepath.Dir(*link)
+			return &l
+		}
+		l := strings.TrimSuffix(*link, filepath.Ext(*link))
+		l = setLastLash(l)
+
+		return &l
+
+	}
+	return nil
+}
+
 func list(node ast.Node, initLevel int, page *Page, source *[]byte) {
 	level := initLevel
 	ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -62,7 +81,7 @@ func list(node ast.Node, initLevel int, page *Page, source *[]byte) {
 					pg.Type = TypeLink
 					pg.Level = level
 					pg.Parent = page
-					pg.ParentLink = page.Link
+					pg.ParentLink = createLink(page.Link)
 
 					listitemlink(&pg, n.FirstChild(), source)
 
@@ -94,7 +113,8 @@ func listitemlink(page *Page, node ast.Node, source *[]byte) {
 				linkStr := string(l.Destination)
 
 				page.Title = &titleStr
-				page.Link = &linkStr
+				page.DataLink = &linkStr
+				page.Link = createLink(&linkStr)
 
 			}
 		}

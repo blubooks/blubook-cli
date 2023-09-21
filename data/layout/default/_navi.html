@@ -2,7 +2,11 @@
 {{ define "pages" }}
     <div class="level-{{ .Level }}">
       
-        <div><a href="{{ .Link }}">{{ .Title }}</a></div>
+        {{ if .Link }}
+        <div><a href="/public/{{ .Link }}">{{ .Title }}</a></div>
+        {{ else }}
+        <div>{{ .Title }}</div>
+        {{ end }}
     {{- range .Pages }} 
         {{ template "pages" . }}       
     {{ end -}}
@@ -16,6 +20,7 @@
 
 {{  end -}}
 {{ template "pages" . }}
+
 
 </div>
 {{- end -}}
