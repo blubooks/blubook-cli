@@ -55,5 +55,4 @@ func Server() {
 		log.Println("server startup failure", err)
 
 	}
-	app.Build("", "", "")
 }

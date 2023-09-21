@@ -1,8 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <base href="{{ .PublicURL }}" />
+        <link rel="stylesheet" href="style.css">
+
+    </head>
 <body>
 
+
+
 {{ template "_navi.html" .Menu }}
+
 
 {{ .Content }}
 

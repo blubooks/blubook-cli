@@ -2,11 +2,14 @@ package app
 
 import (
 	"bytes"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
+	"github.com/wellington/go-libsass"
 	"github.com/yuin/goldmark"
 	meta "github.com/yuin/goldmark-meta"
 )
@@ -45,6 +48,26 @@ type TemplateData struct {
 	PublicPath string
 	DataPath   string
 	LayoutPath string
+	PublicURL  string
+}
+
+func copyDir(source, destination string) error {
+	var err error = filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+		var relPath string = strings.Replace(path, source, "", 1)
+		if relPath == "" {
+			return nil
+		}
+		if info.IsDir() {
+			return os.Mkdir(filepath.Join(destination, relPath), 0755)
+		} else {
+			var data, err1 = ioutil.ReadFile(filepath.Join(source, relPath))
+			if err1 != nil {
+				return err1
+			}
+			return ioutil.WriteFile(filepath.Join(destination, relPath), data, 0777)
+		}
+	})
+	return err
 }
 
 func partial(name string, data any) string {
@@ -163,7 +186,7 @@ func setLastLash(text string) string {
 
 }
 
-func Build(layoutPath string, publicPath string, dataPath string) (error, []string) {
+func Build(publicURL, layoutPath string, publicPath string, dataPath string) (error, []string) {
 	if layoutPath == "" {
 		layoutPath = "data/layout/default/"
 	}
@@ -173,26 +196,33 @@ func Build(layoutPath string, publicPath string, dataPath string) (error, []stri
 	if dataPath == "" {
 		dataPath = "data/content/"
 	}
+	if publicURL == "" {
+		publicURL = "http://localhost/public/"
+	}
 
 	dataPath = setLastLash(dataPath)
 	layoutPath = setLastLash(layoutPath)
 	publicPath = setLastLash(publicPath)
+	publicURL = setLastLash(publicURL)
 
 	menu := BookNavi()
 	var out []string
 	var data TemplateData
 	data.Menu = menu
-	data.ActivePath = publicPath
 	data.PublicPath = publicPath
 	data.ActivePath = layoutPath
 	data.DataPath = dataPath
+	data.PublicURL = publicURL
 
 	tmpl, err := template.New("").Funcs(funcMap).ParseGlob(layoutPath + "*.html")
 	if err != nil {
 		return err, []string{err.Error()}
 	}
-
 	RemoveGlob(publicPath + "*")
+
+	copyDir(layoutPath+"static", publicPath)
+	_ = os.MkdirAll(publicPath+".data/assets", os.ModePerm)
+	copyDir(dataPath+".data/assets", publicPath+".data/assets")
 
 	file, err := os.Create(publicPath + "index.html")
 	if err != nil {
@@ -203,13 +233,13 @@ func Build(layoutPath string, publicPath string, dataPath string) (error, []stri
 	if err != nil {
 		return err, []string{err.Error()}
 	}
+	data.ActivePath = publicPath
 
 	err = tmpl.ExecuteTemplate(file, "index.html", data)
 	if err != nil {
 		log.Printf("Error in Build() -> tmpl.ExecuteTemplate(): %v", err)
 		out = append(out, err.Error())
 	}
-	data.Content = ""
 
 	for _, s := range menu.Pages {
 
@@ -232,6 +262,32 @@ func Build(layoutPath string, publicPath string, dataPath string) (error, []stri
 
 	}
 
+	styleFile := layoutPath + "assets/style/style.scss"
+	if _, err := os.Stat(styleFile); err == nil {
+		r, err := os.Open(styleFile)
+		if err != nil {
+			log.Println(err)
+		}
+		var styleBuffer bytes.Buffer
+
+		comp, err := libsass.New(&styleBuffer, r)
+		if err != nil {
+			out = append(out, "Style: "+err.Error())
+		}
+		// configure @import paths
+		includePaths := []string{layoutPath + "assets/style/partials"}
+		err = comp.Option(libsass.IncludePaths(includePaths))
+		if err != nil {
+			out = append(out, "Style Options: "+err.Error())
+		}
+
+		if err := comp.Run(); err != nil {
+			out = append(out, "Style Compiler: "+err.Error())
+
+		}
+
+		err = os.WriteFile(publicPath+"style.css", styleBuffer.Bytes(), os.ModePerm)
+	}
 	return nil, out
 
 }
