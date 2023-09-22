@@ -7,12 +7,32 @@
     </head>
 <body>
 
+    <header class="main-header"></header>
+    
+    <div class="main-view-wrapper fx-d_row fx-s_1 fx-b_0 fx-g_1 css">
+        <div class="main-view">
+            <div class="main-nav-wrapper css">
+                <nav class="main-nav">
+                    <div class="main-nav-overlay css">
+                        <div class="main-nav-inner css">
+                            {{ template "_navi.html" .Menu }}
+                        </div>
+                    </div>
+                    <div class="main-nav-bottom css">
+                        bottom
+                    </div>
+                    
+                </nav>
+            </div>
+           
+            {{ .Content }}
+        </div>
+
+    </div>
 
 
-{{ template "_navi.html" .Menu }}
 
 
-{{ .Content }}
 
 </body>
 </html>

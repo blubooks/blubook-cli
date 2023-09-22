@@ -2,7 +2,6 @@ package app
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,10 +10,9 @@ import (
 	"strings"
 	"text/template"
 
-	sass "github.com/bep/golibsass/libsass"
+	"github.com/bep/golibsass/libsass"
 	"github.com/blubooks/blubook-cli/pkg/goldmark/baseurl"
 	replacer "github.com/fundipper/goldmark-replacer"
-	"github.com/wellington/go-libsass"
 	"github.com/yuin/goldmark"
 	meta "github.com/yuin/goldmark-meta"
 )
@@ -295,52 +293,55 @@ func Build(publicURL, layoutPath string, publicPath string, dataPath string) (er
 
 	}
 
-	transpiler, err := sass.New(sass.Options{OutputStyle: sass.CompressedStyle})
+	transpiler, err := libsass.New(libsass.Options{
+		OutputStyle:  libsass.CompressedStyle,
+		IncludePaths: []string{layoutPath + "assets/style/"},
+	})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
-	result, err := transpiler.Execute(`
-		$font-stack:    Helvetica, sans-serif;
-		$primary-color: #333;
-
-		body {
-		font: 100% $font-stack;
-		color: $primary-color;
-		}
-		`)
+	source, err := os.ReadFile(layoutPath + "assets/style/style.scss")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
-	fmt.Println(result.CSS)
-
-	styleFile := layoutPath + "assets/style/style.scss"
-	if _, err := os.Stat(styleFile); err == nil {
-		r, err := os.Open(styleFile)
-		if err != nil {
-			log.Println(err)
-		}
-		var styleBuffer bytes.Buffer
-
-		comp, err := libsass.New(&styleBuffer, r)
-		if err != nil {
-			out = append(out, "Style: "+err.Error())
-		}
-		// configure @import paths
-		includePaths := []string{layoutPath + "assets/style/partials"}
-		err = comp.Option(libsass.IncludePaths(includePaths))
-		if err != nil {
-			out = append(out, "Style Options: "+err.Error())
-		}
-
-		if err := comp.Run(); err != nil {
-			out = append(out, "Style Compiler: "+err.Error())
-
-		}
-
-		err = os.WriteFile(publicPath+"style.css", styleBuffer.Bytes(), os.ModePerm)
+	result, err := transpiler.Execute(string(source))
+	if err != nil {
+		log.Println(err)
 	}
+
+	err = os.WriteFile(publicPath+"style.css", []byte(result.CSS), os.ModePerm)
+
+	/*
+
+		styleFile := layoutPath + "assets/style/style.scss"
+		if _, err := os.Stat(styleFile); err == nil {
+			r, err := os.Open(styleFile)
+			if err != nil {
+				log.Println(err)
+			}
+			var styleBuffer bytes.Buffer
+
+			comp, err := libsass.New(&styleBuffer, r)
+			if err != nil {
+				out = append(out, "Style: "+err.Error())
+			}
+			// configure @import paths
+			includePaths := []string{layoutPath + "assets/style/partials"}
+			err = comp.Option(libsass.IncludePaths(includePaths))
+			if err != nil {
+				out = append(out, "Style Options: "+err.Error())
+			}
+
+			if err := comp.Run(); err != nil {
+				out = append(out, "Style Compiler: "+err.Error())
+
+			}
+
+			err = os.WriteFile(publicPath+"style.css", styleBuffer.Bytes(), os.ModePerm)
+		}
+	*/
 	return nil, out
 
 }

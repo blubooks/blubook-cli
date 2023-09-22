@@ -1,56 +1,161 @@
-@import 'test';
-@import "mixins/banner";
-@include bsBanner("");
+@import 'partials/reset';
 
 
-// scss-docs-start import-stack
-// Configuration
-@import "functions";
-@import "variables";
-@import "variables-dark";
-@import "maps";
-@import "mixins";
-@import "utilities";
 
-// Layout & components
-@import "root";
-@import "reboot";
-@import "type";
-@import "images";
-@import "containers";
-@import "grid";
-@import "tables";
-@import "forms";
-@import "buttons";
-@import "transitions";
-@import "dropdown";
-@import "button-group";
-@import "nav";
-@import "navbar";
-@import "card";
-@import "accordion";
-@import "breadcrumb";
-@import "pagination";
-@import "badge";
-@import "alert";
-@import "progress";
-@import "list-group";
-@import "close";
-@import "toasts";
-@import "modal";
-@import "tooltip";
-@import "popover";
-@import "carousel";
-@import "spinners";
-@import "offcanvas";
-@import "placeholders";
+:root {
+    --size-l: 64px;
+    --public-content-desktop-header-height: 80px;
+    --public-content-mobile-header-height: 64px;
+    --public-content-container-max-width: 1900px;
+    --block-wrapper-max-width: 750px;
+    --page-wrapper-max-width: 1200px;
+    --app-header-height: calc(var(--size-l) + 1px);
+}
+*, *:before, *:after {
+    box-sizing: border-box;
+}
 
-// Helpers
-@import "helpers";
 
-// Utilities
-@import "utilities/api";
-// scss-docs-end import-stack
-body {
-   
+.fx-d_row{
+    flex-direction: row;
+}
+
+.fx-s_1 {
+    flex-shrink: 1;
+}
+.fx-b_0 {
+    flex-basis: 0%;
+}
+.fx-g_1 {
+    flex-grow: 1;
+}
+
+
+.css {
+    align-items: stretch;
+    background-color: rgba(0,0,0,0.00);
+    border: 0 solid black;
+    box-sizing: border-box;
+    display: flex;
+    flex-basis: auto;
+    flex-direction: column;
+    flex-shrink: 0;
+    list-style: none;
+    margin: 0px;
+    min-height: 0px;
+    min-width: 0px;
+    padding: 0px;
+    position: relative;
+    text-decoration: none;
+    z-index: 0;
+}
+
+.main-view {
+    flex-direction: row;
+    width: 100%;
+    max-width: var(--public-content-container-max-width);
+    margin: 0 auto;
+
+    display: flex;
+    min-width: 0;
+}
+
+.main-nav-wrapper {
+    display: flex;
+
+    align-self: flex-start;
+
+    position: -webkit-sticky;
+    position: sticky;
+
+    overflow-y: auto;
+
+    top: 80px;
+}
+
+.main-nav {
+    min-height: 0px;
+    flex-direction: column;
+
+
+    box-sizing: border-box;
+
+    position: relative;
+
+    min-width: 0px;
+
+    z-index: 0;
+
+    flex-shrink: 0;
+
+    align-items: stretch;
+
+    flex-basis: auto;
+
+    width: 300px;
+
+    padding: 0px;
+
+    margin: 0px;
+
+    display: flex;
+
+    border-bottom-width: 0px;
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+
+    border-bottom-color: rgba(0,0,0,1.00);
+    border-left-color: rgba(0,0,0,1.00);
+    border-right-color: rgba(0,0,0,1.00);
+    border-top-color: rgba(0,0,0,1.00);
+
+
+    border-bottom-style: solid;
+    border-left-style: solid;
+    border-right-style: solid;
+    border-top-style: solid;
+}
+
+.main-nav-overlay{
+
+        padding-left: 24px;
+
+
+        flex-shrink: 1;
+
+        flex-basis: 0%;
+
+        flex-grow: 1;
+
+}
+
+.main-nav-bottom{
+
+    position: absolute;
+
+    bottom: 0px;
+
+    z-index: 1;
+
+    width: 100%
+}
+
+.main-nav-inner{
+
+        flex-direction: column;
+
+        flex-shrink: 1;
+
+        transform: translateZ(0px);
+
+        flex-basis: 0%;
+
+        overflow-y: auto;
+
+        flex-grow: 1;
+
+        -webkit-overflow-scrolling: touch;
+
+        overflow-x: hidden;
 }
