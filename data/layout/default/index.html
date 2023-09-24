@@ -7,8 +7,40 @@
     </head>
 <body>
 
-    <header class="main-header"></header>
+    <header class="bl-header">
+
+    </header>
+    <div class="bl-view-wrapper">
+        <div class="bl-view">
+            <nav class="css bl-nav-wrapper">
+                <div class="bl-nav">
+                {{ template "_navi.html" .Menu }}
+                </div>
+            </nav>
+            <div class="css bl-container-wrapper">
+                <div class="css bl-container">
+                    <div class="bl-content-wrapper">
+                        <div class="bl-content">
+                            <div class="markdown-body">
+                                {{ .Content }} 
+                            </div>
+                       
+                        </div>
+                        
+                    </div>            
+          
+                    <aside class="bl-sidebar-wrapper">
+                        Side
+                    </aside>
+                </div>
+
+            </div>
+        </div>
+
+  
+    </div>
     
+    <!--
     <div class="main-view-wrapper fx-d_row fx-s_1 fx-b_0 fx-g_1 css">
         <div class="main-view">
             <div class="main-nav-wrapper css">
@@ -30,7 +62,7 @@
 
     </div>
 
-
+-->
 
 
 

@@ -1,0 +1,40 @@
+
+:root {
+    --size-xxs: 18px;
+    --size-xs: 24px;
+    --size-s: 32px;
+    --size-m: 48px;
+    --size-l: 64px;
+    --size-xl: 80px;  
+}
+:root {
+  
+    --public-content-desktop-header-height: 80px;
+    --public-content-mobile-header-height: 64px;
+    --public-content-container-max-width: 1900px;
+    --block-wrapper-max-width: 750px;
+    --page-wrapper-max-width: 1200px;
+    --app-header-height: calc(var(--size-l) + 1px);
+}
+*:before, *:after {
+    box-sizing: border-box;
+}
+
+.css {
+    align-items: stretch;
+    background-color: rgba(0,0,0,0.00);
+    border: 0 solid black;
+    box-sizing: border-box;
+    display: flex;
+    flex-basis: auto;
+    flex-direction: column;
+    flex-shrink: 0;
+    list-style: none;
+    margin: 0px;
+    min-height: 0px;
+    min-width: 0px;
+    padding: 0px;
+    position: relative;
+    text-decoration: none;
+    z-index: 0;
+}
